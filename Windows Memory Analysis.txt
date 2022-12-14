@@ -1,0 +1,217 @@
+WINDOWS MEMORY IMAGE / ANALYSIS
+
+Capturing your own Memory and Analyze it.
+
+** FORENSICS
+* National Institute of Standards and Technology (NIST) - Search web!
+
+For Acquisition:-
+- nist forensic tool list - web search
+	- toolcatalog.nist.gov/ : List of all valued legal tools for forensic Insvestigation (eg. Magnet RAM Capture, Belkasoft RAM Capture, winpmem/linpmem/osxpmem(CLI), AccessData FTK imager)
+	- Magnet RAM Capture (MRC) - dumps RAM into .raw file
+
+For Analysis:-
+** Volatility (tool)   (volatility vs volatility3 - Web Search)
+- Use direct Executable 
+	- Additional requirements are taken care of.
+	- There could be profiles and may not work on some images.
+
+- From Github repo
+	- need to install python and associated dependecies
+	- Have more Profiles, so more Accuracy.
+
+
+Volatility - Setup
+- download executable from official website
+- (in windows) copy .raw images into executable file's folder
+- (in linux) - command cheatsheet : github.com/volatilityfoundation/volatility/wiki/Command-Reference
+		 - memory images in linux : .mem, .vmem, .img, etc
+		 - cd into folder of memory images
+		 1. Identify the image first
+		 	>> volatility -f <filename>.vmem imageinfo
+		 		-f for selecting file
+		 	output == suggested profiles
+		 		    choose any profile for analysis but prefer first profiles
+		 >> volatility -f <filename>.vmem --profile=<profilename> -h
+		 	for additional info
+		 2. See processes runnning in bg
+		 	>> volatility -f win7manycmd.vmem --profile=Win7SP1x86_23418 
+		 	>> volatility -f <filename>.vmem --profile=<profilename> pslist
+				- wow64 column : can get to know about 32bit applications running on 64bit machine
+		 3. Know the child and subchild information
+		 	>> volatility -f <filename>.vmem --profile=<profilename> pstree	
+		 		- Pid of some processes matches PPid of other processes : process of PPid is a child of process of similar Pid	 	
+		 4. To check Network connections
+		 	>> volatility -f <filename>.vmem --profile=<profilename> netscan
+		 		- shows processes active/communicating with which networks
+		 5. Displaying Registry entries
+		 	>> volatility -f <filename>.vmem --profile=<profilename> hivelist
+		 6. Get Dynamic Linked List Libraries
+		 	>> volatility -f <filename>.vmem --profile=<profilename> dlllist
+		 7. Scanning Drivers
+		 	>> volatility -f <filename>.vmem --profile=<profilename> driverscan
+		 8. Show Devicetree
+		 	>> volatility -f <filename>.vmem --profile=<profilename> devicetree
+		 
+--- 	Threat actors use legit process name & signature for Running their Malware
+	- notepad.exe
+	- svchost.exe
+	- services.exe
+		
+		9. Scan CMD processes
+			>> volatility -f <filename>.vmem --profile=<profilename> cmdscan
+		10. Dump process to an executable file (from pslist result)
+			>> volatility -f <filename>.vmem --profile=<profilename> procdump -p <Pid no> -D <directory name or path where to save dump file>
+				-p : for Pid number
+				-D : to dump files in which directory
+			>> volatility -f <filename>.vmem --profile=<profilename> procdump --name <name of process to dump> -D <directory name or path where to save dump file>
+				--name : specify name of one particular process to be dumped
+				
+--- Check for viruses on virustotal (web search), upload file.
+
+
+** Windows process Geneology
+
+-- Download SANS hunt evil (specially for Windows process Geneology)
+	- read the geneology in it thoroughly.
+
+-- Filter using grep command: 
+	>> volatility -f <filename>.vmem --profile=<profilename> pstree | grep svchost.exe
+		- if PPid of all svchost.exe is 520(or similar), all of them are legit and system processes.
+	>> volatility -f <filename>.vmem --profile=<profilename> pstree | grep lsass.exe 
+--- Validate all these outputs with the help of SANS hunt evil Geneology
+
+
+** ANALYSIS after dumping required processes into Directory
+
+Scenario=All cmd.exe files are dumped into directory cmdDump
+- All of them can be uploaded to virustotal for check malwares BUT,
+
+>> cd /cmdDump
+
+>> ls -l
+O/P> (In Scenario) size of one cmd process is suspicious. Different than all sizes of other cmd Processes. This is our target.
+Let's run cmdscan plugin on that file.
+
+>> cd /dir where .vmem profile is saved
+>> volatility -f <filename>.vmem --profile=<profilename> cmdscan > <filename>.txt
+	> : save results in file
+	<filename>.txt : txt file where results of cmdscan are to be stored
+>> cd /cmdDump
+>> ls -l
+O/P> Pid of cmd process having less size is 3620(for eg.) in last column executable.<Pid>.exe 
+
+-Copy Pid
+-Search Pid in .txt file of cmdscan
+-If it works, good and well, if it doesn't then,
+
+>> cd /dir where .vmem profile is saved
+>> volatility -f <filename>.vmem --profile=<profilename> consoles > consolefile.txt
+
+-open consolefile.txt
+-search for Pid (i.e. 3620)
+O/P> in 'Dump:' you will find what malicious things are going on with it.
+-Upload that dump file of Pid 3620 on virustotal
+-Still it might show that the dump file is clean and no malware found in it.
+
+
+*************** CRACKING WINDOWS PASSWORD FROM MEMORY IMAGES **********************
+
+--Do hivelist and dump the securityhive
+	- plugin : hashdump
+	>> volatility -f <filename>.vmem --profile=<profilename> hashdump	
+	O/P> Administrator:xxx:xxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxx::: (hashkey)
+	     Guest:xxx:xxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxx::: (hashkey)
+	     Username:xxx:xxxxxxxxxxxxxxxxxxxxx:xxxxxxxxxxxxx::: (hashkey)
+	- Copy the last set from the key (eg. xxx:xxxxxxxxxxxxxxxxxxxxx:"xxxxxxxxxxxxx":::)
+	- Windows uses NTML Encryption for generating Hash Keys
+	- Search for 'Online hash crack' on web
+	- Paste the key and Get the Password for that user, administrator or guest
+	
+**********************************************************************************************
+
+Setting up and Getting started with volatility2 from GitHub
+
+URL: https://github.com/volatilityfoundation/volatility
+
+>> sudo git clone https://github.com/volatilityfoundation/volatility
+
+- Scroll down the Readme.md, Click on Requirements
+- Install all the Recommended Packages with sudo  
+	>> sudo pip2 install <dependencies>
+
+>> cd /volatility
+
+- vol.py is volatility file
+- Copy win.mem to volatility directory
+
+>> python2 vol.py -f win.mem --profile=Win10x64_17134 pstree		(get profile name by imageinfo plugin)
+
+>> python2 vol.py -f win.mem --profile=Win10x64_17134 pstree | grep svchost.exe	(filtering svchost.exe)
+	- svchosts having PPid other than Pid of services.exe are abnormal in system
+
+>> mkdir svcdump
+>> sudo python2 vol.py -f win.mem --profile=Win10x64_17134 procdump -p <Pid of abnormal svchost> --dump-dir=svcdump/
+	- if unable to dump, try for all abnormals
+- after dump:
+- Open virustotal on web
+- upload .exe dump file
+- See the Results
+
+*******************************************************************************************************
+
+Setting up and Getting started with volatility3 from GitHub
+
+URL: https://github.com/volatilityfoundation/volatility3
+
+>> git clone https://github.com/volatilityfoundation/volatility3
+
+>> cd volatility3
+- Install all dependencies of volatility3 same as v2 but using pip3
+>> sudo pip3 install <dependenct name> 
+ 
+- copy memdump.mem into volatility3 directory
+
+>> sudo python3 vol.py -f memdump.mem -h
+	- windows. plugins are for windows systems
+	- linux. plugins are for linux systems
+	- mac. plugins are for mac systems
+
+- There's no need to mention --profile in volatility3
+
+>> sudo python3 vol.py -f memdump.mem windows.pslist.PsList
+
+>> sudo python3 vol.py -f memdump.mem windows.pstree.PsTree
+
+>> sudo python3 vol.py -f memdump.mem windows.hashdump.HashDump
+	- same as volatility2, copy hashkey and paste on crackstation.net
+
+** Retrieve MAC Address of system 
+
+>> sudo python3 vol.py -f win.mem windows.registry.hivelist.HiveList
+	- gives MAC
+
+- using v2
+
+>> sudo python2 vol.py -f win.mem --profile=Win10x64_17134 hivelist
+
+>> sudo python2 vol.py -f win.mem --profile=Win10x64_17134 printkey -K "Microsoft\Windows NT\CurrentVersion\NetworkList\Signatures\Unmanaged"
+	- prints the key which when converted into uppercase will give registry network keys
+	- takes a bit long time
+
+
+** Premium Software - RedLine **
+
+- In Windows Machine
+- download redline from fireeye.com 
+- Install redline exe file
+
+- One of the Best tool to retrieve System logs and all the events performed by user/s 
+- Also works well in free version
+
+** Tool - Cyber Triage **
+
+- Download and install cyber triage from web 
+- It's a paid software
+
+
