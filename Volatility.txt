@@ -9,3 +9,113 @@ For example, Volatility allows us to:
 	Use Yara rules to search for indicators of malware
 	Retrieve hashed passwords, clipboard contents, and contents of the command prompt
 	And much, much more!
+
+Once Volatility and its requirements (i.e. Python) are installed, Volatility can be run using python3 vol.py
+
+
+Volatility requires  a few arguments to run:
+
+	Calling the Volatility tool via python3 vol.py
+	Any options such as the name and location of the memory dump
+	The action you want to perform (I.e. what plugins you want to use)
+
+
+Some common options and examples:
+
+
+OPTION					DESCRIPTION								EXAMPLE
+
+-f		This argument is where you provide the name and location of the memory 		python3 vol.py -f /path/to/my/memorydump.vmem
+		dump that you wish to analyse.
+
+-v		This argument increases the verbosity of Volatility. This is sometimes 		python3 vol.py -v 
+		useful to understand what Volatility is doing in cases of debugging.
+
+-p		This argument allows you to override the default location of where 		python3 vol.py -p /path/to/my/custom/plugins
+		plugins are stored.	
+
+-o		This argument allows you to specify where extracted processes or DLLs 		python3 vol.py -o /output/extracted/files/here
+		are stored.	
+
+
+
+And finally, now we need to decide what we want to analyse the image for. Volatility uses plugins to perform analysis, such as:
+
+	Listing processes
+	Listing network connections
+	Listing contents of the clipboard, notepad, or command prompt
+	For more - https://volatility3.readthedocs.io/en/latest/volatility3.plugins.html
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+INSTALLATION
+
+git clone https://github.com/volatilityfoundation/volatility3.git
+cd volatility3
+python3 setup.py install
+python3 vol.py —h
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Here, we are going to use Volatility to:
+
+	See what Operating System the memory dump is from
+	See what processes were running at the time of capture
+	See what connections were being made at the time of capture
+
+
+Using Volatility to Analyse an Image
+
+Before proceeding with our analysis, we need to confirm the Operating System of the device that the memory has been captured from. We need to confirm this because it will determine what plugins we can use in our investigation.
+
+
+- Use the imageinfo plugin to analyse our memory dump file to determine the Operating System.
+	> python3 vol.py -f workstation.vmem windows.info
+Note: This can sometimes take a couple of minutes, depending on the size of the memory dump and the hardware of the system running the scan.
+	- Volatility has confirmed that the Operating System is Windows. 
+
+- Now we use the Windows sub-set of plugins with Volatility (Limited to this task).
+
+
+PLUGIN 							DESCRIPTION						OBJECTIVE
+
+windows.pslist			This plugin lists all of the processes that were running	To discover what processes were running on the system. 
+				at the time of the capture.
+
+windows.psscan			This plugin allows us to analyse a specific process 		To discover what a specific process was actually doing.
+				further.	
+
+windows.dumpfiles		This plugin allows us to export the process, where we can 	To export a specific binary that allows us further to
+				perform further analysis (i.e. static or dynamic analysis).	analyse it through static or dynamic analysis.
+
+windows.netstat			This plugin lists all network connections at the time of 	To understand what connections were being made. For
+				the capture.							example, was a process causing the computer to connect 
+												to a malicious server? We can use this IP address to
+												implement defensive measures on other devices. For
+												example, if we know an IP address is malicious, and
+												another device is communicating with it, then we know
+												that device is also infected.
+							
+
+
+An extensive list of the Windows sub-set of plugins can be found at : https://volatility3.readthedocs.io/en/stable/volatility3.plugins.windows.html
+ 
+ 
+USING THE FOLLOWING PLUGINS
+
+1. windows.pslist
+ 	> python3 vol.py -f workstation.vmem windows.pslist
+
+2. windows.psscan
+	> python3 vol.py -f workstation.vmem windows.psscan
+
+3. windows.dumpfiles
+	> python3 vol.py -f workstation.vmem windows.dumpfiles
+
+
+
+
+
+
+
