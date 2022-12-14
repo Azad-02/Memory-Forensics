@@ -1,0 +1,24 @@
+What is Memory Forensics?
+
+Memory forensics is the analysis of the volatile memory that is in use when a computer is powered on. Computers use dedicated storage devices called 
+Random Access Memory (RAM) to remember what is being performed on the computer at the time. RAM is extremely quick and is the preferred method of 
+storing and accessing data. However, it is limited compared to storage devices such as hard drives. This type of data is volatile because it will be 
+deleted when the computer is powered off. RAM stores data such as your clipboard or unsaved files. 
+
+We can analyse a computer's memory to see what applications (processes), what network connections were being made, and many more useful pieces of 
+information. For example, we can analyse the memory of a computer infected with malware to see what the malware was doing at the time.
+
+
+Why is Memory Forensics Useful?
+
+Memory forensics is an extremely important element when investigating a computer. A memory dump is a full capture of what was happening on the 
+Computer at the time, for example, network connections or things running in the background. Most of the time, malicious code attempts to hide from 
+the user. However, it cannot hide from memory.
+
+We can use this capture of the memory for analysis at a later date, especially as the memory on the computer will eventually be lost (if, for example, 
+we power off the computer to prevent malware from spreading). By analysing the memory, we can discover exactly what the malware was doing, who it was 
+contacting, and such forth.
+
+
+Introduction to Processes.
+
