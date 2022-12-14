@@ -22,3 +22,33 @@ contacting, and such forth.
 
 Introduction to Processes.
 
+At the simplest, a process is a running program. For example, a process is created when running an instance of notepad. You can have multiple processes for an application (for example, running three instances of notepad will create three processes). This is important to know because being able to determine what processes were running on the computer will tell us what applications were running at the time of the capture.
+
+On Windows, we can use Task Manager to view and manage the processes running on the computer.
+
+
+On a computer, processes are usually categorised into two groups:
+
+
+
+Category					Description							Example
+
+
+User Processes			These processes are programs that the user has launched.	notepad.exe - this is a text editor that is launched 
+				For example, text editors, web browsers, etc.				      by the user.
+
+
+Background Process		These processes are automatically launched and managed by 	dwm.exe - this is an essential process for Windows that
+				the Operating System and are often essential to the		is responsible for displaying windows and applications 
+				Operating System behaving correctly.				on the computer.
+
+
+
+
+
+
+
+
+
+
+
